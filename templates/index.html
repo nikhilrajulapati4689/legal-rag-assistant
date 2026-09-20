@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Legal Document RAG Assistant</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #eef2ff,
+                    #f8fafc
+                );
+
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 30px;
+        }
+
+        .container {
+
+            width: 100%;
+            max-width: 850px;
+
+            background: white;
+
+            border-radius: 20px;
+
+            padding: 40px;
+
+            box-shadow:
+                0 15px 40px
+                rgba(0, 0, 0, 0.12);
+        }
+
+        .header {
+
+            text-align: center;
+
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+
+            font-size: 32px;
+
+            color: #1e293b;
+
+            margin-bottom: 10px;
+        }
+
+        .header p {
+
+            color: #64748b;
+
+            font-size: 15px;
+        }
+
+        .question-box {
+
+            display: flex;
+
+            gap: 10px;
+
+            margin-bottom: 30px;
+        }
+
+        #question {
+
+            flex: 1;
+
+            padding: 15px;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 10px;
+
+            font-size: 16px;
+
+            outline: none;
+        }
+
+        #question:focus {
+
+            border-color: #6366f1;
+        }
+
+        #askButton {
+
+            padding: 15px 25px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background: #4f46e5;
+
+            color: white;
+
+            font-size: 16px;
+
+            cursor: pointer;
+        }
+
+        #askButton:hover {
+
+            background: #4338ca;
+        }
+
+        #askButton:disabled {
+
+            background: #94a3b8;
+
+            cursor: not-allowed;
+        }
+
+        .loading {
+
+            display: none;
+
+            text-align: center;
+
+            color: #6366f1;
+
+            margin-bottom: 20px;
+        }
+
+        .answer-section {
+
+            display: none;
+
+            margin-top: 20px;
+        }
+
+        .answer-section h2 {
+
+            color: #1e293b;
+
+            margin-bottom: 15px;
+        }
+
+        #answer {
+
+            background: #f8fafc;
+
+            border-left: 4px solid #4f46e5;
+
+            padding: 20px;
+
+            border-radius: 8px;
+
+            line-height: 1.7;
+
+            white-space: pre-wrap;
+
+            color: #334155;
+        }
+
+        .sources {
+
+            margin-top: 25px;
+        }
+
+        .sources h3 {
+
+            color: #1e293b;
+
+            margin-bottom: 10px;
+        }
+
+        .source-item {
+
+            background: #f1f5f9;
+
+            padding: 12px;
+
+            margin-bottom: 8px;
+
+            border-radius: 8px;
+
+            font-size: 14px;
+
+            color: #475569;
+        }
+
+        .disclaimer {
+
+            margin-top: 30px;
+
+            padding: 15px;
+
+            background: #fff7ed;
+
+            border-radius: 8px;
+
+            color: #9a3412;
+
+            text-align: center;
+
+            font-size: 13px;
+        }
+        .chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.chat-message {
+    padding: 18px;
+    border-radius: 12px;
+    line-height: 1.6;
+}
+
+.user-message {
+    background: #eef2ff;
+    border-left: 4px solid #6366f1;
+}
+
+.ai-message {
+    background: #f8fafc;
+    border-left: 4px solid #4f46e5;
+}
+
+.message-label {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #1e293b;
+}
+
+.source-item {
+    background: #e2e8f0;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 7px;
+    font-size: 13px;
+    color: #475569;
+}
+.chat-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+#clearButton {
+    padding: 9px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #64748b;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#clearButton:hover {
+    background: #475569;
+}
+        @media (max-width: 600px) {
+
+            .container {
+                padding: 25px;
+            }
+
+            .question-box {
+                flex-direction: column;
+            }
+
+            #askButton {
+                width: 100%;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+
+            <h1>⚖ Legal Document RAG Assistant</h1>
+
+            <p>
+                Ask questions about the provided legal documents
+            </p>
+
+        </div>
+
+
+        <div class="question-box">
+            <div class="chat-controls">
+
+    <button id="clearButton">
+        Clear Chat
+    </button>
+
+</div>
+
+            <input
+                type="text"
+                id="question"
+                placeholder="Enter your legal question..."
+            >
+
+            <button id="askButton">
+                Ask
+            </button>
+
+        </div>
+
+
+        <div class="loading" id="loading">
+
+            Searching documents and generating answer...
+
+        </div>
+
+
+        <div class="chat-container" id="chatContainer">
+        </div>
+
+
+        <div class="disclaimer">
+
+            ⚠ Educational Information Retrieval System —
+            Not Legal Advice.
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const questionInput =
+            document.getElementById("question");
+
+        const askButton =
+            document.getElementById("askButton");
+
+        const loading =
+            document.getElementById("loading");
+
+        const chatContainer =
+            document.getElementById("chatContainer");
+        
+        const clearButton =
+    document.getElementById("clearButton");
+
+    clearButton.addEventListener(
+    "click",
+    function() {
+        chatContainer.innerHTML = "";
+    }
+);
+
+        askButton.addEventListener(
+            "click",
+            askQuestion
+        );
+
+
+        questionInput.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (event.key === "Enter") {
+
+                    askQuestion();
+
+                }
+
+            }
+        );
+
+
+        async function askQuestion() {
+
+            const question =
+                questionInput.value.trim();
+
+
+            if (!question) {
+
+                alert("Please enter a question.");
+
+                return;
+
+            }
+
+
+            askButton.disabled = true;
+
+            loading.style.display = "block";
+
+        
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/ask",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                question: question
+                            })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Something went wrong."
+                    );
+
+                }
+
+
+                
+                // Create user message
+const userMessage =
+    document.createElement("div");
+
+userMessage.className =
+    "chat-message user-message";
+
+userMessage.innerHTML = `
+    <div class="message-label">You</div>
+    <div>${question}</div>
+`;
+
+chatContainer.appendChild(userMessage);
+
+
+// Create AI message
+const aiMessage =
+    document.createElement("div");
+
+aiMessage.className =
+    "chat-message ai-message";
+
+let sourceHTML = "";
+
+if (data.sources.length > 0) {
+
+    sourceHTML = `
+        <div class="message-label">
+            Sources
+        </div>
+    `;
+
+    data.sources.forEach(
+        function(source) {
+
+            sourceHTML += `
+                <div class="source-item">
+                    ${source.file} — Page ${source.page}
+                </div>
+            `;
+
+        }
+    );
+}
+
+aiMessage.innerHTML = `
+    <div class="message-label">Legal RAG Assistant</div>
+
+    <div>${data.answer}</div>
+
+    ${sourceHTML}
+`;
+
+chatContainer.appendChild(aiMessage);
+
+
+// Scroll to latest message
+aiMessage.scrollIntoView({
+    behavior: "smooth"
+});
+            }
+            catch (error) {
+
+                alert(error.message);
+
+            }
+            finally {
+
+                askButton.disabled = false;
+
+                loading.style.display = "none";
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>
